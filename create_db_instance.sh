@@ -100,16 +100,6 @@ create_db_instance(){
   echo "The instance $db_name has been created"
 }
 
-# 停止实例
-stop_db_instance(){
-  read -p "Please input instance_name which is needed to stop:" instance_name
-  {
-    echo "export ORACLE_SID=$instance_name"
-    echo "sqlplus / as sysdba <<EOF"
-    echo "shutdown immediate"
-    echo "EOF"
-  } | su - oracle
-}
 # 主程序
 orginal_dir=$(pwd)
 echo "正在检查Oracle用户的环境变量"
