@@ -1,4 +1,5 @@
 #!/bin/bash
+# auther by Li
 check_oracle_env(){
   result=$(su - oracle -c 'env | grep -E "ORACLE_HOME=|ORACLE_BASE=" 2>/dev/null')
   if [[ -z "$result" ]]; then
@@ -57,9 +58,10 @@ create_oracle_pfile(){
     echo "error:$input_file not exits!"
     exit 1
   fi
-  read -p "Please input control_files Path(default:):" new_control_path
+  read -p "Please input control_files Path(default:/opt/oracle19c/oradata/data/control.ctl):" new_control_path
   new_control_path=${new_control_path:-/}
-  read -p "Please input log_archive_dest_1 Path (default:):" new_log_path
+  read -p "Please input log_archive_dest_1 Path (default:/opt/oracle19c/oradata/log):" new_log_path
+  new_log_path=${new_log_path:-/}
   {
     while IFS= read -r line
     do
@@ -76,20 +78,22 @@ create_oracle_pfile(){
       fi
     done < "$input_file"
   } > "$pfile_dir/$output_file"
+  chmod 755 $pfile_dir/$output_file
+  chown oracle:oinstall $pfile_dir/$output_file
   echo "The pfile has been generated"
 }
 # 新建实例
 create_db_instance(){
-  echo "select status from v\$instance;" >/opt/oracle/oradata/workstation/codes/checklogging.sql
+  echo "select status from v\$instance;" >/opt/oracle19c/oradata/codes/checklogging.sql
   {
     echo "echo 'current ORACLE_HOME: $ORACLE_HOME'"
     echo "echo 'current ORACLE_BASE: $ORACLE_BASE'"
     echo "echo 'current output_file: $output_file'"
     echo "export ORACLE_SID=$db_name"
-    echo "sqlplus / as sysdba"
-    echo "echo 'startup nomount pfile=\"$pfile_dir/$output_file\"'"
-    echo "spool /opt/oracle/oradata/workstation/codes/checklogging.txt"
-    echo "@/opt/oracle/oradata/workstation/codes/checklogging.sql"
+    echo "sqlplus / as sysdba << EOF"
+    echo "startup nomount pfile='$pfile_dir/$output_file'"
+    echo "spool /opt/oracle19c/oradata/codes/checklogging.txt"
+    echo "@/opt/oracle19c/oradata/codes/checklogging.sql"
     echo "spool off"
     echo "EOF"
   } | su - oracle

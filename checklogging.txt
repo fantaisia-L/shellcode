@@ -1,0 +1,7 @@
+SQL> @/opt/oracle19c/oradata/codes/checklogging.sql
+
+STATUS                                                                          
+------------                                                                    
+STARTED                                                                         
+
+SQL> spool off

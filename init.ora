@@ -1,0 +1,19 @@
+*.audit_file_dest='/opt/oracle/admin/ORCL/adump'
+*.audit_sys_operations=false
+*.audit_trail='none'
+*.compatible='19.0.0'
+*.control_files='/opt/oracle/oradata/ORCL/control01.ctl'
+*.db_block_size=8192
+*.db_name='ORCL'
+*.diagnostic_dest='/opt/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=ORCLXDB)'
+*.local_listener=''
+*.log_archive_dest_1='LOCATION=/opt/oracle/oradata/archives/ORCL'
+*.nls_language='AMERICAN'
+*.nls_territory='AMERICA'
+*.open_cursors=300
+*.pga_aggregate_target=794m
+*.processes=640
+*.remote_login_passwordfile='EXCLUSIVE'
+*.sga_target=2380m
+*.undo_tablespace='UNDOTBS1'
