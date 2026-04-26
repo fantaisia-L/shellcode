@@ -1,0 +1,88 @@
+-- 创建 T1 表空间
+CREATE TABLESPACE T1
+DATAFILE
+'/opt/oracle19c/oradata/T1_01.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T1_02.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T1_03.dbf' SIZE 30M AUTOEXTEND OFF
+EXTENT MANAGEMENT LOCAL AUTOALLOCATE
+SEGMENT SPACE MANAGEMENT AUTO;
+
+-- 创建 T2 表空间
+CREATE TABLESPACE T2
+DATAFILE
+'/opt/oracle19c/oradata/T2_01.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T2_02.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T2_03.dbf' SIZE 30M AUTOEXTEND OFF
+EXTENT MANAGEMENT LOCAL AUTOALLOCATE
+SEGMENT SPACE MANAGEMENT AUTO;
+
+-- 创建 T3 表空间
+CREATE TABLESPACE T3
+DATAFILE
+'/opt/oracle19c/oradata/T3_01.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T3_02.dbf' SIZE 30M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/T3_03.dbf' SIZE 30M AUTOEXTEND OFF
+EXTENT MANAGEMENT LOCAL AUTOALLOCATE
+SEGMENT SPACE MANAGEMENT AUTO;
+
+CREATE TEMPORARY TABLESPACE U1_TEMP
+TEMPFILE
+'/opt/oracle19c/oradata/U1_TEMP_01.tmp' SIZE 20M AUTOEXTEND OFF,
+'/opt/oracle19c/oradata/U1_TEMP_02.tmp' SIZE 20M AUTOEXTEND OFF
+EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M
+;
+
+CREATE USER moni
+IDENTIFIED BY moni123
+DEFAULT TABLESPACE T1
+TEMPORARY TABLESPACE TEMP;
+
+CREATE USER U1
+IDENTIFIED BY u123
+DEFAULT TABLESPACE T1
+TEMPORARY TABLESPACE U1_TEMP;
+
+GRANT CONNECT, RESOURCE, DBA TO moni;
+GRANT CONNECT, RESOURCE, DBA TO U1;
+
+-- ==============================
+-- 创建 tab1（分区表）
+-- ==============================
+CREATE TABLE U1.tab1 (
+    id    NUMBER,
+    info  VARCHAR2(100)
+)
+PARTITION BY RANGE (id)
+(
+    PARTITION p_t1 VALUES LESS THAN (1001) TABLESPACE T1,
+    PARTITION p_t3 VALUES LESS THAN (MAXVALUE) TABLESPACE T3
+);
+
+-- 插入 T1 (1~1000)
+INSERT INTO U1.tab1 (id, info)
+SELECT rownum, 'DATA_' || rownum
+FROM all_objects
+WHERE rownum <= 1000;
+
+-- 插入 T3 (1001~2000)
+INSERT INTO U1.tab1 (id, info)
+SELECT 1000 + rownum, 'DATA_' || (1000 + rownum)
+FROM all_objects
+WHERE rownum <= 1000;
+
+COMMIT;
+
+-- ==============================
+-- 创建 tab2（T2表空间）
+-- ==============================
+CREATE TABLE U1.tab2 (
+    id    NUMBER,
+    info  VARCHAR2(100)
+) TABLESPACE T2;
+
+INSERT INTO U1.tab2 (id, info)
+SELECT rownum, 'TAB2_DATA_' || rownum
+FROM all_objects
+WHERE rownum <= 500;
+
+COMMIT;

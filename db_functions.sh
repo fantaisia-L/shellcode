@@ -196,3 +196,29 @@ stop_db_instance() {
 
     echo "✅ 实例 ${instance_name} 已停止"
 }
+
+
+
+full_data_base_backup(){
+  source /home/oracle/.profile
+  read -p "Please enter the backup(default:/opt/oracle19c/oradata/backup):" backup_path
+  backup_path=${backup_path:-/opt/oracle19c/oradata/backup}
+  echo $backup_path
+  echo "ORACLE_HOME: $ORACLE_HOME"
+  echo "ORACLE_BASE: $ORACLE_BASE"
+  echo "ORACLE_SID: $ORACLE_SID"
+  LOGFILE="$backup_path/${ORACLE_SID}_$(date +"%Y%m%d_%H%M%S").log"
+  echo $LOGFILE
+  su - oracle -c "
+	rman target / log=$LOGFILE <<EOF
+        run {
+            allocate channel t1 type disk;
+            allocate channel t2 type disk;
+            backup database format '$backup_path/%d_FULL_%T_%U_%p';
+            backup current controlfile format '$backup_path/%d_CF_%T_%U';
+            release channel t1;
+            release channel t2;
+        }
+EOF
+    "
+}
