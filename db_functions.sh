@@ -191,12 +191,46 @@ stop_db_instance() {
         sqlplus / as sysdba <<EOF
         shutdown immediate;
         exit
-        EOF
+EOF
     "
 
     echo "✅ 实例 ${instance_name} 已停止"
 }
 
+restore_db_file_system(){
+    # 恢复控制文件
+    source /home/oracle/.profile
+    read -p "Please enter the database instance that needs to be restored:" instance_name
+    instance_name=${instance_name:-ORCL}
+    echo $instance_name
+    if ! check_instance_exists "${instance_name}"; then
+        echo "❌ 实例 ${instance_name} 不存在"
+        return 1
+    fi
+    # 读取参数中控制文件位置
+    local control_file=$(sql_exec "$instance_name" "select REGEXP_SUBSTR(value, '[^,]+', 1, 1) from v\\\$parameter where name='control_files';")
+    local archive_path=$(sql_exec "$instance_name" "select substr(value, instr(value,'=')+1) from v\\\$parameter where name='log_archive_dest_1';")
+    echo "$control_file"
+    echo "$archive_path"
+}
+
+sql_exec(){
+    local sid=$1
+    local sql=$2
+    local exec_res
+    exec_res=$(su oracle -c "
+    export ORACLE_SID=$sid
+    sqlplus -S / as sysdba <<EOF
+    set heading off
+    select 1 from dual;
+    prompt ###sql_result_start###
+    $sql
+    prompt ###sql_result_end###
+    exit;
+EOF
+    " 2>/dev/null | sed -n '/###sql_result_start###/,/###sql_result_end###/p' | grep -v "###sql_result" | grep -v ^$)
+    echo "$exec_res"
+}
 
 
 full_data_base_backup(){
