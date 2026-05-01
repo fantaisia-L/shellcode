@@ -200,7 +200,7 @@ EOF
 restore_db_file_system(){
     # 恢复控制文件
     source /home/oracle/.profile
-    read -p "Please enter the database instance that needs to be restored:" instance_name
+    read -p "Please enter the database instance that needs to be restored:(deafult:ORCL)" instance_name
     instance_name=${instance_name:-ORCL}
     echo $instance_name
     if ! check_instance_exists "${instance_name}"; then
@@ -210,8 +210,45 @@ restore_db_file_system(){
     # 读取参数中控制文件位置
     local control_file=$(sql_exec "$instance_name" "select REGEXP_SUBSTR(value, '[^,]+', 1, 1) from v\\\$parameter where name='control_files';")
     local archive_path=$(sql_exec "$instance_name" "select substr(value, instr(value,'=')+1) from v\\\$parameter where name='log_archive_dest_1';")
-    echo "$control_file"
-    echo "$archive_path"
+    local control_file_path=$(dirname "$control_file")
+    echo "控制文件路径：$control_file_path"
+    echo "归档文件路径：$archive_path"
+    read -p "Please enter the folder where the backup file is located.(default:/opt/oracle19c/oradata/backup)" backup_path
+    local backup_path=${backup_path:-"/opt/oracle19c/oradata/backup"}
+    
+    local bk_cf_file=$(ls $backup_path/*CF* 2>/dev/null | head -1)
+    echo $bk_cf_file
+    if [ -n "$bk_cf_file" ];then
+        echo "找到CF文件: $bk_cf_file"
+        local db_status=$(sql_exec "$instance_name" "select status from v\\\$instance;")
+        echo $db_status
+        if [[ $db_status = "STARTED" ]]; then
+            echo "数据库当前处于nomount状态"
+            restore_control_file "$instance_name" $bk_cf_file "$backup_path"
+        elif [[ $db_status = "MOUNTED" ]]; then
+            echo "数据库当前处于mount状态"
+            sh ./modify_control_file.sh $"$instance_name"
+        fi
+    else
+        echo "未找到CF文件"
+    fi
+}
+
+restore_control_file(){
+    local sid=$1
+    local bk_cf=$2
+    local bk_path=$3
+    local logfile_cf="$bk_path/$sid_$(date +"%Y%m%d_%H%M%S").log"
+    su - oracle -c "
+    export ORACLE_SID=$sid
+
+    rman target / log=$logfile_cf <<EOF
+    restore controlfile from '$bk_cf';
+    alter database mount;
+    exit;
+EOF
+
+    "
 }
 
 sql_exec(){
