@@ -95,11 +95,13 @@ create_oracle_pfile() {
             if [[ "$line" == *.control_files=* ]]; then
                 echo "*.control_files='$new_control_path/$db_name/control.ctl'"
             elif [[ "$line" == *.log_archive_dest_1=* ]]; then
-                echo "*.log_archive_dest_1='LOCATION=$new_log_path'"
+                echo "*.log_archive_dest_1='LOCATION=$new_log_path/$db_name'"
             elif [[ "$line" == *.audit_file_dest=* ]]; then
                 echo "*.audit_file_dest='$ORACLE_HOME/$db_name/adump'"
             elif [[ "$line" == *.diagnostic_dest=* ]]; then
                 echo "*.diagnostic_dest='$ORACLE_HOME'"
+            elif [[ "$line" == *.db_name=* ]]; then
+                echo "*.db_name='$db_name'"
             else
                 echo "$line"
             fi
@@ -227,7 +229,7 @@ restore_db_file_system(){
             restore_control_file "$instance_name" $bk_cf_file "$backup_path"
         elif [[ $db_status = "MOUNTED" ]]; then
             echo "数据库当前处于mount状态"
-            sh ./modify_control_file.sh $"$instance_name"
+            # sh ./modify_control_file.sh $"$instance_name"
         fi
     else
         echo "未找到CF文件"
