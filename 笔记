@@ -13,4 +13,17 @@ select value from v$parameter where name='log_archive_dest_1';
 prompt ###sql_result_end###
 
 
+select 'set newname for datafile ' || file# || ' to ''' || '/opt/oracle19c/data/bianxing/' || substr(name, instr(name, '/', -1)+1) || ''';' from v\$datafile;
 
+select 'SQL "ALTER DATABASE RENAME FILE ''''' || member || ''''' TO ''''' || '/opt/oracle19c/log/bianxing/' || substr(member, instr(member, '/', -1)+1) || '''''";' from v\$logfile;
+
+
+
+
+select 'alter database rename file '||name|| ' to ''' || '$NEW_DATAFILE_PATH/' || substr(name, instr(name, '/', -1)+1) || ''';' from v$datafile;
+
+
+select a.group#, a.status as group_status, a.sequence#, b.member, b.status as member_status
+from v$log a, v$logfile b
+where a.group# = b.group#
+order by a.group#, b.member;

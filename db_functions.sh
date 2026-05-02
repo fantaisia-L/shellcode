@@ -287,7 +287,7 @@ full_data_base_backup(){
         run {
             allocate channel t1 type disk;
             allocate channel t2 type disk;
-            backup database format '$backup_path/%d_FULL_%T_%U_%p';
+            backup database plus archivelog format '$backup_path/%d_FULL_%T_%U_%p';
             backup current controlfile format '$backup_path/%d_CF_%T_%U';
             release channel t1;
             release channel t2;

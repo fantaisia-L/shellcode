@@ -22,6 +22,7 @@ EOF
 restore database;
 SWITCH DATAFILE ALL;
 SWITCH TEMPFILE ALL;
+recover database;
 }
 EOF
     rman target / cmdfile=$RMAN_OUTPUT log=$RMAN_LOG
